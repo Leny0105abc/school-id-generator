@@ -48,7 +48,13 @@ const SECTIONS: Record<number, { section: string; strand?: string }> = {
 }
 
 const BACKGROUNDS = ['#dbeafe', '#dcfce7', '#fef3c7', '#fce7f3', '#e0e7ff', '#ccfbf1', '#f3e8ff', '#ffedd5']
-const RELATIONS = ['Mother', 'Father', 'Guardian', 'Grandmother', 'Aunt']
+const CONTACTS: [string, string][] = [
+  ['Elena', 'Mother'],
+  ['Roberto', 'Father'],
+  ['Carmen', 'Guardian'],
+  ['Ricardo', 'Grandfather'],
+  ['Teresa', 'Aunt'],
+]
 
 function drawSilhouette(ctx: CanvasRenderingContext2D, w: number, h: number, bg: string) {
   ctx.fillStyle = bg
@@ -118,8 +124,8 @@ export async function loadDemoData(): Promise<number> {
       birthDate: `${2019 - gradeLevel}-${pad((i % 12) + 1, 2)}-${pad((i % 27) + 1, 2)}`,
       bloodType: ['O+', 'A+', 'B+', 'AB+'][i % 4],
       address: `Purok ${(i % 6) + 1}, Brgy. San Isidro, Sample City`,
-      emergencyName: `${['Elena', 'Roberto', 'Carmen', 'Ricardo', 'Teresa'][i % 5]} ${lastName.split('-')[0]}`,
-      emergencyRelationship: RELATIONS[i % RELATIONS.length],
+      emergencyName: `${CONTACTS[i % CONTACTS.length][0]} ${lastName.split('-')[0]}`,
+      emergencyRelationship: CONTACTS[i % CONTACTS.length][1],
       emergencyPhone: `0917 555 ${pad(100 + i, 4)}`,
     }
     people.push({ ...input, id: newId(), photoId: null, createdAt: now, updatedAt: now })
