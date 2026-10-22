@@ -102,6 +102,34 @@ export async function prepareAsset(file: Blob, maxSide = 1000): Promise<Blob> {
   }
 }
 
+/**
+ * Turns the paper around a scanned or photographed signature transparent:
+ * near-white pixels fade out, ink stays.
+ */
+export async function whiteToTransparent(file: Blob, maxSide = 1000): Promise<Blob> {
+  const bitmap = await decodeImage(file)
+  try {
+    const { width, height } = fitInside(bitmap.width, bitmap.height, maxSide)
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })!
+    ctx.drawImage(bitmap, 0, 0, width, height)
+    const image = ctx.getImageData(0, 0, width, height)
+    const px = image.data
+    for (let i = 0; i < px.length; i += 4) {
+      const light = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2]
+      // Fully clear above 225, fully kept below 165, soft edge in between.
+      const keep = Math.min(1, Math.max(0, (225 - light) / 60))
+      px[i + 3] = Math.round(px[i + 3] * keep)
+    }
+    ctx.putImageData(image, 0, 0)
+    return await canvasToBlob(canvas, 'image/png')
+  } finally {
+    bitmap.close()
+  }
+}
+
 export function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()

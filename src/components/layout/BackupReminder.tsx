@@ -12,14 +12,14 @@ export function BackupReminder() {
   const latest = useLiveQuery(async () => {
     const count = await db.people.count()
     const newest = await db.people.orderBy('updatedAt').last()
-    return { count, newestChange: newest?.updatedAt ?? 0 }
+    return { count, newestChange: newest?.updatedAt ?? 0, checkedAt: Date.now() }
   }, [])
 
   if (!settings || !latest || latest.count === 0 || location.pathname === '/backup') return null
 
   const last = settings.lastBackupAt
   const changedSinceBackup = last == null || latest.newestChange > last
-  const isOld = last == null || Date.now() - last > REMIND_AFTER_MS
+  const isOld = last == null || latest.checkedAt - last > REMIND_AFTER_MS
   if (!changedSinceBackup || !isOld) return null
 
   return (

@@ -19,7 +19,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { removePersonPhoto, setPersonPhoto } from '@/lib/db'
+import { CardPreview } from '@/components/card/IdCard'
+import { useCardImages } from '@/components/card/useCardImages'
+import { removePersonPhoto, setPersonPhoto, useSettings } from '@/lib/db'
 import { idLabel, idNumberWarning, normalizeIdNumber } from '@/lib/ids'
 import { savePerson } from '@/lib/people'
 import { ACCEPTED_IMAGES, ImageError, preparePhoto } from '@/lib/photos/image'
@@ -43,6 +45,26 @@ interface PersonDialogProps {
   person?: Person
 }
 
+function CardPreviewForForm({
+  form,
+  photoId,
+  photoUrl,
+}: {
+  form: PersonInput
+  photoId: string | null | undefined
+  photoUrl?: string
+}) {
+  const settings = useSettings()
+  const images = useCardImages(photoId, photoUrl)
+  if (!settings) return null
+  return (
+    <div className="mt-2 grid justify-items-center gap-1.5">
+      <span className="justify-self-start text-sm font-medium">Card preview</span>
+      <CardPreview side="front" person={form} settings={settings} images={images} width={180} />
+    </div>
+  )
+}
+
 function toInput(person: Person | undefined, type: PersonType): PersonInput {
   if (!person) return emptyPersonInput(type)
   const { id: _id, photoId: _p, createdAt: _c, updatedAt: _u, ...input } = person
@@ -56,15 +78,6 @@ export function PersonDialog({ open, onOpenChange, type, person }: PersonDialogP
   const [busy, setBusy] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const uid = useId()
-
-  // Reset when the dialog opens for a different person.
-  useEffect(() => {
-    if (open) {
-      setForm(toInput(person, type))
-      setErrors({})
-      setPendingPhoto(null)
-    }
-  }, [open, person, type])
 
   const pendingUrl = useMemo(
     () => (pendingPhoto && pendingPhoto !== 'remove' ? URL.createObjectURL(pendingPhoto.cropped) : undefined),
@@ -276,6 +289,7 @@ export function PersonDialog({ open, onOpenChange, type, person }: PersonDialogP
               <p className="text-xs text-muted-foreground">
                 The photo is cropped to a square. You can adjust the crop on the Photos page.
               </p>
+              <CardPreviewForForm form={form} photoId={pendingPhoto === 'remove' ? null : person?.photoId} photoUrl={pendingUrl} />
             </div>
           </div>
 

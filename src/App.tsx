@@ -12,6 +12,7 @@ const PhotosPage = lazy(() => import('@/pages/PhotosPage'))
 const DesignPage = lazy(() => import('@/pages/DesignPage'))
 const PrintPage = lazy(() => import('@/pages/PrintPage'))
 const BackupPage = lazy(() => import('@/pages/BackupPage'))
+const DevCardsPage = import.meta.env.DEV ? lazy(() => import('@/pages/DevCardsPage')) : null
 
 export default function App() {
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="design" element={<DesignPage />} />
             <Route path="print" element={<PrintPage />} />
             <Route path="backup" element={<BackupPage />} />
+            {DevCardsPage && <Route path="dev/cards" element={<DevCardsPage />} />}
             <Route path="*" element={<PeoplePage />} />
           </Route>
         </Routes>

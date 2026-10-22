@@ -79,7 +79,13 @@ export default function PeoplePage() {
   const [grade, setGrade] = useState(ALL)
   const [section, setSection] = useState(ALL)
   const [page, setPage] = useState(0)
-  const [editing, setEditing] = useState<{ type: PersonType; person?: Person } | null>(null)
+  const [editing, setEditingState] = useState<{ type: PersonType; person?: Person } | null>(null)
+  // A new key each time the dialog opens gives it a fresh, empty form.
+  const [editKey, setEditKey] = useState(0)
+  const setEditing = (value: { type: PersonType; person?: Person } | null) => {
+    if (value) setEditKey((k) => k + 1)
+    setEditingState(value)
+  }
   const [toDelete, setToDelete] = useState<string[] | null>(null)
   const [loadingDemo, setLoadingDemo] = useState(false)
 
@@ -355,6 +361,7 @@ export default function PeoplePage() {
       )}
 
       <PersonDialog
+        key={editKey}
         open={editing != null}
         onOpenChange={(open) => !open && setEditing(null)}
         type={editing?.type ?? tab}
