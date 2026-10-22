@@ -66,6 +66,14 @@ describe('backup', () => {
     expect((await getSettings()).schoolName).toBe('Local School')
   })
 
+  it('takes school settings from the backup when none are set here', async () => {
+    await seed()
+    const zip = await encodeBackup(await collectBackup())
+    await clearAllData()
+    await restoreBackup(decodeBackup(zip), 'merge')
+    expect((await getSettings()).schoolName).toBe('Sample National High School')
+  })
+
   it('rejects files that are not backups', () => {
     expect(() => decodeBackup(new Uint8Array([1, 2, 3]))).toThrow(BackupError)
     const other = zipSync({ 'manifest.json': strToU8(JSON.stringify({ app: 'something-else', version: 1, exportedAt: 0 })) })

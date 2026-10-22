@@ -33,7 +33,7 @@ export function AppShell() {
             </span>
             <span className="hidden sm:inline">School ID Generator</span>
           </NavLink>
-          <nav className="-mx-1 flex min-w-0 flex-1 gap-1 overflow-x-auto px-1" aria-label="Main">
+          <nav className="-mx-1 flex min-w-0 flex-1 gap-1 overflow-x-auto px-1 [scrollbar-width:none]" aria-label="Main">
             {NAV.map(({ to, label, icon: Icon }) => (
               <NavLink
                 key={to}

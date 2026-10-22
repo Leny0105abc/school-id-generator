@@ -206,6 +206,11 @@ export async function restoreBackup(data: BackupData, mode: RestoreMode): Promis
     for (const asset of data.assets) {
       if (!(await db.assets.get(asset.id))) await db.assets.add(asset)
     }
+    // A fresh browser has no school details yet: take them from the backup.
+    const local = await db.settings.get('settings')
+    if (data.settings && !local?.schoolName) {
+      await db.settings.put({ ...data.settings, lastBackupAt: local?.lastBackupAt ?? null })
+    }
     return { added, updated }
   })
 }

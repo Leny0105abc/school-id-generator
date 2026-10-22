@@ -213,7 +213,7 @@ export default function BackupPage() {
                     <span>
                       Add to what's here
                       <span className="block text-xs text-muted-foreground">
-                        People with the same ID number are updated. Your school settings stay.
+                        People with the same ID number are updated. School details already set here stay.
                       </span>
                     </span>
                   </Label>

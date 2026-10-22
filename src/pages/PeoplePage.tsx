@@ -295,7 +295,7 @@ export default function PeoplePage() {
                     />
                   </TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>{idLabel(tab)}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{idLabel(tab)}</TableHead>
                   <TableHead className="hidden md:table-cell">
                     {tab === 'learner' ? 'Grade & section' : 'Position'}
                   </TableHead>
@@ -412,12 +412,13 @@ function PersonRow({
           aria-label={`Select ${sortableName(p)}`}
         />
       </TableCell>
-      <TableCell>
+      <TableCell className="whitespace-normal">
         <button type="button" onClick={onEdit} className="flex items-center gap-3 text-left">
           <PersonAvatar person={p} />
           <span className="grid">
             <span className="font-medium">{sortableName(p)}</span>
             <span className="text-xs text-muted-foreground md:hidden">
+              <span className="font-mono sm:hidden">{p.idNumber} · </span>
               {p.type === 'learner' ? gradeLabel(p) : p.position}
             </span>
           </span>
@@ -434,7 +435,7 @@ function PersonRow({
           )}
         </button>
       </TableCell>
-      <TableCell className="font-mono text-xs">{p.idNumber}</TableCell>
+      <TableCell className="hidden font-mono text-xs sm:table-cell">{p.idNumber}</TableCell>
       <TableCell className="hidden md:table-cell">
         {p.type === 'learner' ? gradeLabel(p) : [p.position, p.department].filter(Boolean).join(' · ')}
       </TableCell>
