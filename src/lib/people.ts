@@ -35,6 +35,32 @@ export async function savePerson(
   return { ok: true, id }
 }
 
+export function filledFields(input: PersonInput): Partial<PersonInput> {
+  return Object.fromEntries(
+    Object.entries(input).filter(([, v]) => v !== '' && v != null),
+  ) as Partial<PersonInput>
+}
+
+/** Adds new people and (optionally) updates existing ones from an import. Photos are kept. */
+export async function applyImport(
+  rows: { status: string; input: PersonInput; existingId?: string }[],
+  updateExisting: boolean,
+): Promise<{ added: number; updated: number }> {
+  const now = Date.now()
+  const toAdd: Person[] = rows
+    .filter((r) => r.status === 'new')
+    .map((r) => ({ ...r.input, id: newId(), photoId: null, createdAt: now, updatedAt: now }))
+  const toUpdate = updateExisting ? rows.filter((r) => r.status === 'update' && r.existingId) : []
+  await db.transaction('rw', db.people, async () => {
+    await db.people.bulkAdd(toAdd)
+    // Empty cells keep what is saved, so a file with fewer columns never erases data.
+    await db.people.bulkUpdate(
+      toUpdate.map((r) => ({ key: r.existingId!, changes: { ...filledFields(r.input), updatedAt: now } })),
+    )
+  })
+  return { added: toAdd.length, updated: toUpdate.length }
+}
+
 /** Learners by grade, section, then name; teachers by name. */
 export function comparePeople(a: Person, b: Person): number {
   if (a.type !== b.type) return a.type === 'learner' ? -1 : 1

@@ -122,7 +122,7 @@ export const BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
 export function gradeLabel(p: Pick<PersonInput, 'gradeLevel' | 'section' | 'strand'>): string {
   if (p.gradeLevel == null) return ''
   const parts = [`Grade ${p.gradeLevel}`]
-  if (p.strand) parts.push(p.strand)
+  if (p.strand && p.gradeLevel >= 11) parts.push(p.strand)
   if (p.section) parts.push(p.section)
   return parts.join(' – ')
 }
