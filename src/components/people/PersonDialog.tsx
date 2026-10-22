@@ -1,5 +1,5 @@
-import { ImageUpIcon, Loader2Icon, TrashIcon } from 'lucide-react'
-import { useEffect, useId, useMemo, useRef, useState, type ComponentProps, type FormEvent } from 'react'
+import { CropIcon, ImageUpIcon, Loader2Icon, TrashIcon } from 'lucide-react'
+import { useId, useRef, useState, type ComponentProps, type FormEvent } from 'react'
 import { toast } from 'sonner'
 import { Field } from '@/components/common/Field'
 import { Button } from '@/components/ui/button'
@@ -21,7 +21,9 @@ import {
 } from '@/components/ui/select'
 import { CardPreview } from '@/components/card/IdCard'
 import { useCardImages } from '@/components/card/useCardImages'
-import { removePersonPhoto, setPersonPhoto, useSettings } from '@/lib/db'
+import { CropDialog, type CropSource } from '@/components/photos/CropDialog'
+import { useObjectUrl } from '@/lib/blob-urls'
+import { db, removePersonPhoto, setPersonPhoto, useSettings } from '@/lib/db'
 import { idLabel, idNumberWarning, normalizeIdNumber } from '@/lib/ids'
 import { savePerson } from '@/lib/people'
 import { ACCEPTED_IMAGES, ImageError, preparePhoto } from '@/lib/photos/image'
@@ -76,14 +78,11 @@ export function PersonDialog({ open, onOpenChange, type, person }: PersonDialogP
   const [errors, setErrors] = useState<FieldErrors>({})
   const [pendingPhoto, setPendingPhoto] = useState<PendingPhoto>(null)
   const [busy, setBusy] = useState(false)
+  const [cropSource, setCropSource] = useState<CropSource | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const uid = useId()
 
-  const pendingUrl = useMemo(
-    () => (pendingPhoto && pendingPhoto !== 'remove' ? URL.createObjectURL(pendingPhoto.cropped) : undefined),
-    [pendingPhoto],
-  )
-  useEffect(() => () => void (pendingUrl && URL.revokeObjectURL(pendingUrl)), [pendingUrl])
+  const pendingUrl = useObjectUrl(pendingPhoto && pendingPhoto !== 'remove' ? pendingPhoto.cropped : null)
 
   const set = <K extends keyof PersonInput>(key: K, value: PersonInput[K]) => {
     setForm((f) => ({ ...f, [key]: value }))
@@ -105,6 +104,15 @@ export function PersonDialog({ open, onOpenChange, type, person }: PersonDialogP
     } finally {
       setBusy(false)
       if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+
+  async function openCrop() {
+    if (pendingPhoto && pendingPhoto !== 'remove') {
+      setCropSource({ original: pendingPhoto.original, crop: pendingPhoto.crop })
+    } else if (person?.photoId) {
+      const record = await db.photos.get(person.photoId)
+      if (record) setCropSource({ original: record.original, crop: record.crop })
     }
   }
 
@@ -282,13 +290,15 @@ export function PersonDialog({ open, onOpenChange, type, person }: PersonDialogP
                 <ImageUpIcon /> {hasPhoto ? 'Change photo' : 'Upload photo'}
               </Button>
               {hasPhoto && (
-                <Button type="button" variant="ghost" onClick={() => setPendingPhoto('remove')} disabled={busy}>
-                  <TrashIcon /> Remove photo
-                </Button>
+                <>
+                  <Button type="button" variant="outline" onClick={openCrop} disabled={busy}>
+                    <CropIcon /> Adjust crop
+                  </Button>
+                  <Button type="button" variant="ghost" onClick={() => setPendingPhoto('remove')} disabled={busy}>
+                    <TrashIcon /> Remove photo
+                  </Button>
+                </>
               )}
-              <p className="text-xs text-muted-foreground">
-                The photo is cropped to a square. You can adjust the crop on the Photos page.
-              </p>
               <CardPreviewForForm form={form} photoId={pendingPhoto === 'remove' ? null : person?.photoId} photoUrl={pendingUrl} />
             </div>
           </div>
@@ -304,6 +314,14 @@ export function PersonDialog({ open, onOpenChange, type, person }: PersonDialogP
           </DialogFooter>
         </form>
       </DialogContent>
+      <CropDialog
+        open={cropSource != null}
+        onOpenChange={(o) => !o && setCropSource(null)}
+        source={cropSource}
+        onSave={({ crop, cropped }) => {
+          if (cropSource) setPendingPhoto({ original: cropSource.original, crop, cropped })
+        }}
+      />
     </Dialog>
   )
 }

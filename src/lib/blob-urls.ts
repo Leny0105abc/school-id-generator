@@ -25,6 +25,23 @@ export function cachedObjectUrl(key: string, blob: Blob): string {
   return url
 }
 
+/**
+ * Temporary URL for a Blob that is not stored (e.g. an unsaved upload).
+ * Created and revoked in the same effect so React's double mount in
+ * development never leaves a revoked URL behind.
+ */
+export function useObjectUrl(blob: Blob | null | undefined): string | undefined {
+  const [entry, setEntry] = useState<{ blob: Blob; url: string } | null>(null)
+  useEffect(() => {
+    if (!blob) return
+    const url = URL.createObjectURL(blob)
+    // oxlint-disable-next-line react/set-state-in-effect -- the URL is an external resource tied to this effect
+    setEntry({ blob, url })
+    return () => URL.revokeObjectURL(url)
+  }, [blob])
+  return blob && entry?.blob === blob ? entry.url : undefined
+}
+
 /** URL of a person's cropped photo, or undefined. */
 export function usePhotoUrl(photoId: string | null | undefined): string | undefined {
   const key = photoId ? `photo:${photoId}` : null
