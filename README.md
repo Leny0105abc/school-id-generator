@@ -2,6 +2,10 @@
 
 Make print-ready ID cards for learners and teachers, right in the browser.
 
+**Live site: https://nhs-ids.vercel.app** — always use this address. Data is saved per web
+address, so records entered at another address (such as a Vercel deployment link) won't
+appear here.
+
 - **Private by design.** Records, photos, logos and signatures are saved in your browser
   (IndexedDB) and never leave your computer. There is no server, no account and no analytics.
   The site's Content-Security-Policy blocks connections to any other website.
